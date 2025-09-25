@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
@@ -24,6 +26,18 @@ namespace Crosshair
         private Line LineTop, LineBottom, LineLeft, LineRight;
         private Ellipse Circle;
         private CrosshairType currentType = CrosshairType.Classic;
+
+        // Import necessary user32.dll functions for window style manipulation
+        const int GWL_EXSTYLE = -20;
+        const int WS_EX_TRANSPARENT = 0x00000020;
+        const int WS_EX_TOOLWINDOW = 0x00000080;
+        const int WS_EX_NOACTIVATE = 0x08000000;
+
+        [DllImport("user32.dll")]
+        static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll")]
+        static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
         public OverlayWindow()
         {
@@ -60,6 +74,18 @@ namespace Crosshair
             SetCrosshairType(CrosshairType.Classic);
             SetVisible(true);
             CenterOnScreen();
+
+            this.Cursor = System.Windows.Input.Cursors.None;
+        }
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            var hwnd = new WindowInteropHelper(this).Handle;
+            int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+            exStyle |= WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
+            SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
         }
 
         public void SetColor(System.Windows.Media.Color color)
