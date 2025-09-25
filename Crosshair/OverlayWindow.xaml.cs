@@ -4,10 +4,11 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-// aliasy WPF do jednoznaczności
+// Aliases for WPF types for clarity
 using MediaColor = System.Windows.Media.Color;
 using MediaColors = System.Windows.Media.Colors;
 using MediaBrushes = System.Windows.Media.Brushes;
+
 namespace Crosshair
 {
     public enum CrosshairType
@@ -28,7 +29,7 @@ namespace Crosshair
         {
             InitializeComponent();
 
-            // Transparent window settings
+            // Configure window for transparency and overlay behavior
             this.WindowStyle = WindowStyle.None;
             this.AllowsTransparency = true;
             this.Background = MediaBrushes.Transparent;
@@ -37,7 +38,7 @@ namespace Crosshair
             this.Width = 200;
             this.Height = 200;
 
-            // Initialize shapes
+            // Initialize crosshair shapes
             LineTop = new Line();
             LineBottom = new Line();
             LineLeft = new Line();
@@ -52,7 +53,7 @@ namespace Crosshair
             canvas.Children.Add(Circle);
             this.Content = canvas;
 
-            // Default settings
+            // Set default crosshair settings
             SetColor(Colors.Red);
             SetThickness(2);
             SetSize(20);
@@ -63,6 +64,7 @@ namespace Crosshair
 
         public void SetColor(System.Windows.Media.Color color)
         {
+            // Set stroke color for all crosshair elements
             SolidColorBrush brush = new SolidColorBrush(color);
             LineTop.Stroke = brush;
             LineBottom.Stroke = brush;
@@ -73,11 +75,12 @@ namespace Crosshair
 
         public void SetThickness(double thickness)
         {
+            // Set stroke thickness for all crosshair elements
             LineTop.StrokeThickness = thickness;
             LineBottom.StrokeThickness = thickness;
             LineLeft.StrokeThickness = thickness;
             LineRight.StrokeThickness = thickness;
-            Circle.StrokeThickness = thickness / 2; // optional: thinner circle
+            Circle.StrokeThickness = thickness / 2; // Optionally use a thinner circle
         }
 
         public void SetSize(double size)
@@ -85,7 +88,7 @@ namespace Crosshair
             double centerX = this.Width / 2;
             double centerY = this.Height / 2;
 
-            // Only draw visible lines based on type
+            // Draw only the visible lines based on the current crosshair type
             if (LineTop.Visibility == Visibility.Visible)
             {
                 LineTop.X1 = centerX; LineTop.Y1 = centerY - size;
@@ -124,31 +127,36 @@ namespace Crosshair
         {
             currentType = type;
 
-            // Reset all to visible
+            // Make all elements visible by default
             LineTop.Visibility = LineBottom.Visibility = LineLeft.Visibility = LineRight.Visibility = Circle.Visibility = Visibility.Visible;
 
             switch (type)
             {
                 case CrosshairType.Classic:
-                    break; // all visible
+                    // All elements are visible
+                    break;
                 case CrosshairType.Dot:
+                    // Only the dot (circle) is visible
                     LineTop.Visibility = LineBottom.Visibility = LineLeft.Visibility = LineRight.Visibility = Visibility.Hidden;
                     break;
                 case CrosshairType.Cross:
+                    // Hide the circle, show cross lines
                     Circle.Visibility = Visibility.Hidden;
                     break;
                 case CrosshairType.TShape:
+                    // Hide the bottom line and the circle
                     LineBottom.Visibility = Visibility.Hidden;
                     Circle.Visibility = Visibility.Hidden;
                     break;
             }
 
-            // Redraw with current size
-            SetSize(Width / 10); // default proportional size, can adjust later
+            // Redraw crosshair with the current size
+            SetSize(Width / 10); // Default proportional size, can be adjusted
         }
 
         public void CenterOnScreen()
         {
+            // Center the overlay window on the primary screen
             var screenWidth = SystemParameters.PrimaryScreenWidth;
             var screenHeight = SystemParameters.PrimaryScreenHeight;
             this.Left = (screenWidth - this.Width) / 2;
@@ -157,6 +165,7 @@ namespace Crosshair
 
         public void SetVisible(bool visible)
         {
+            // Show or hide the overlay window
             this.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
         }
     }

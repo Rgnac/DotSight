@@ -8,7 +8,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-// aliasy do rozdzielenia WPF i Forms
+// Aliases to separate WPF and Forms types
 using FormsApp = System.Windows.Forms.Application;
 using DrawingColor = System.Drawing.Color;
 using MediaBrushes = System.Windows.Media.Brushes;
@@ -32,9 +32,8 @@ namespace Crosshair
             overlay = new OverlayWindow();
             overlay.Show();
 
-
             overlay.CenterOnScreen();
-            // Initialize tray icon
+            // Initialize tray icon and menu
             trayMenu = new ContextMenuStrip();
             trayMenu.Items.Add("Exit", null, OnTrayExitClick);
 
@@ -44,7 +43,7 @@ namespace Crosshair
             trayIcon.Visible = true;
             trayIcon.Text = "DotSight";
 
-            // Double-click tray icon restores GUI
+            // Double-clicking the tray icon restores the main window
             trayIcon.DoubleClick += (s, e) =>
             {
                 this.Show();
@@ -52,7 +51,7 @@ namespace Crosshair
                 this.Activate();
             };
 
-            // Handle closing GUI to hide instead of exit
+            // Override default close behavior: hide window instead of exiting
             this.Closing += MainWindow_Closing;
 
             CrosshairToggle.Checked += (s, e) => overlay.SetVisible(true);
@@ -69,14 +68,16 @@ namespace Crosshair
         private void OnTrayExitClick(object sender, EventArgs e)
         {
             trayIcon.Visible = false;
+            trayIcon.Dispose(); // release tray icon resources
+            timer.Stop();       // stop the timer
             overlay.Close();
             System.Windows.Application.Current.Shutdown(); // WPF
         }
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            e.Cancel = true; // cancel default close
-            this.Hide();     // hide GUI
-                             // overlay stays visible
+            e.Cancel = true; // cancel default close operation
+            this.Hide();     // hide the main window
+                             // overlay remains visible
         }
         // ---------- WinAPI ----------
         [DllImport("user32.dll")]
@@ -114,7 +115,7 @@ namespace Crosshair
                 {
                     if (string.IsNullOrWhiteSpace(p.MainWindowTitle)) continue;
 
-                    // Partial match
+                    // Partial title match
                     if (p.MainWindowTitle.IndexOf(desiredTitle, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         targetHwnd = p.MainWindowHandle;
@@ -123,7 +124,7 @@ namespace Crosshair
                 }
                 catch
                 {
-                    // ignore processes that throw exceptions
+                    // Ignore processes that throw exceptions
                 }
             }
         }
@@ -156,7 +157,7 @@ namespace Crosshair
                 overlay?.SetColor(color);
             }
         }
-        //diff crosshairs
+        // Different crosshair types
         private void CrosshairsButton_Click(object sender, RoutedEventArgs e)
         {
             CrosshairsPanel.Visibility = CrosshairsPanel.Visibility == Visibility.Visible
@@ -181,7 +182,7 @@ namespace Crosshair
                     Background = MediaBrushes.Transparent
                 };
 
-                // użycie aliasu MediaColor
+                // Use MediaColor alias
                 MediaColor color = MediaColors.Red;
                 SolidColorBrush strokeBrush = new SolidColorBrush(color);
 
@@ -221,7 +222,7 @@ namespace Crosshair
 
                 canvas.MouseDown += (s, e) =>
                 {
-                    overlay.SetCrosshairType(type); // zastosuj wybrany crosshair
+                    overlay.SetCrosshairType(type); // apply selected crosshair type
                 };
 
                 CrosshairsPanel.Children.Add(canvas);
