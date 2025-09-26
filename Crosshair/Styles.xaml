@@ -77,7 +77,8 @@
         <Setter Property="Foreground" Value="{StaticResource LightForegroundBrush}"/>
     </Style>
 
-    <!-- Style for ComboBox with vibrant gradient background and white font -->
+    <!-- Style for ComboBox with vibrant gradient background, hover and pressed effects -->
+    <!-- Style for ComboBox - Basic appearance -->
     <Style TargetType="ComboBox">
         <Setter Property="FontFamily" Value="{StaticResource GlobalFontFamily}"/>
         <Setter Property="Foreground" Value="{StaticResource LightForegroundBrush}"/>
@@ -92,58 +93,33 @@
                     <Setter Property="FontFamily" Value="{StaticResource GlobalFontFamily}"/>
                     <Setter Property="Foreground" Value="{StaticResource LightForegroundBrush}"/>
                     <Setter Property="Background" Value="{StaticResource VibrantGradientBrush}"/>
+                    
+                    <!-- Hover effect for ComboBoxItems -->
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#5A00A8" Offset="0"/>
+                                        <GradientStop Color="#41007E" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#6A00C8" Offset="0"/>
+                                        <GradientStop Color="#51009E" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </Style.Triggers>
                 </Style>
             </Setter.Value>
         </Setter>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ComboBox">
-                    <Grid>
-                        <Border
-                            x:Name="MainBorder"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="4" />
-                        <ContentPresenter
-                            Margin="6,2,30,2"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Left"
-                            Content="{TemplateBinding SelectionBoxItem}"
-                            ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                            ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" />
-                        <ToggleButton
-                            x:Name="ToggleButton"
-                            Grid.Column="1"
-                            Focusable="False"
-                            IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                            Background="{StaticResource VibrantGradientBrush}"
-                            BorderBrush="{StaticResource LightForegroundBrush}"
-                            BorderThickness="1"
-                            Width="24"
-                            Height="24"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center">
-                            <Path Data="M 0 0 L 8 8 L 16 0 Z" Fill="{StaticResource LightForegroundBrush}" Stretch="Uniform" Width="12" Height="8" Margin="6,8,6,8"/>
-                        </ToggleButton>
-                        <Popup
-                            IsOpen="{TemplateBinding IsDropDownOpen}"
-                            Placement="Bottom"
-                            AllowsTransparency="True"
-                            Focusable="False">
-                            <Border
-                                Background="{StaticResource VibrantGradientBrush}"
-                                BorderBrush="{StaticResource VibrantGradientBrush}"
-                                BorderThickness="2"
-                                CornerRadius="4">
-                                <ScrollViewer>
-                                    <ItemsPresenter/>
-                                </ScrollViewer>
-                            </Border>
-                        </Popup>
-                    </Grid>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+        <!-- No template here - this allows MainWindow to apply custom templates -->
     </Style>
 </ResourceDictionary>

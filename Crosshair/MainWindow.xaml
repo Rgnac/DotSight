@@ -3,6 +3,92 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="DotSight Settings" Height="475" Width="300"
         Background="{StaticResource DarkBackgroundBrush_2}">
+        
+    <Window.Resources>
+        <!-- Clickable ComboBox Template (with click-through arrow) -->
+        <ControlTemplate x:Key="ClickableComboBoxTemplate" TargetType="ComboBox">
+            <Grid>
+                <!-- Main Border -->
+                <Border
+                    x:Name="MainBorder"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="4" />
+                
+                <!-- Content Presenter -->
+                <ContentPresenter
+                    x:Name="ContentPresenter"
+                    Margin="6,2,30,2"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Left"
+                    Content="{TemplateBinding SelectionBoxItem}"
+                    ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                    ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" />
+                
+                <!-- PART_EditableTextBox (required for ComboBox to function) -->
+                <TextBox x:Name="PART_EditableTextBox" 
+                         Visibility="Hidden" 
+                         IsReadOnly="{TemplateBinding IsReadOnly}" />
+                
+                <!-- This toggle button covers the ENTIRE ComboBox, including the arrow area -->
+                <ToggleButton 
+                    x:Name="PART_ToggleButton"
+                    IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                    ClickMode="Press"
+                    Focusable="False">
+                    <ToggleButton.Template>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border Background="Transparent" />
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+                </ToggleButton>
+                
+                <!-- Arrow visual (just decorative now) -->
+                <Path 
+                    x:Name="DropDownArrow"
+                    Data="M 0 0 L 8 8 L 16 0 Z"
+                    Fill="{StaticResource LightForegroundBrush}"
+                    Stretch="Uniform"
+                    Width="12"
+                    Height="8"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Margin="0,0,10,0"
+                    IsHitTestVisible="False"/>  <!-- Make the arrow not respond to hits -->
+                
+                <!-- Dropdown Popup -->
+                <Popup
+                    x:Name="PART_Popup"
+                    IsOpen="{TemplateBinding IsDropDownOpen}"
+                    AllowsTransparency="True"
+                    Focusable="False"
+                    PopupAnimation="Slide"
+                    Placement="Bottom">
+                    <Border
+                        Background="{StaticResource VibrantGradientBrush}"
+                        BorderBrush="{StaticResource VibrantGradientBrush}"
+                        BorderThickness="2"
+                        CornerRadius="4"
+                        MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                        <ScrollViewer SnapsToDevicePixels="True">
+                            <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                        </ScrollViewer>
+                    </Border>
+                </Popup>
+            </Grid>
+            <!-- Visual state triggers -->
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="MainBorder" Property="Background" Value="{StaticResource StartOfGradientBrush}"/>
+                </Trigger>
+                <Trigger Property="IsDropDownOpen" Value="True">
+                    <Setter TargetName="MainBorder" Property="Background" Value="{StaticResource EndOfGradientBrush}"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+    </Window.Resources>
+    
     <StackPanel Margin="10" VerticalAlignment="Top">
         <!-- Profile Management Section -->
         <GroupBox Header="Profile Management" Margin="0,0,0,10">
@@ -21,7 +107,8 @@
                           Grid.Row="0" 
                           Grid.Column="0"
                           Margin="0,0,5,0"
-                          SelectionChanged="ProfileComboBox_SelectionChanged"/>
+                          SelectionChanged="ProfileComboBox_SelectionChanged"
+                          Template="{StaticResource ClickableComboBoxTemplate}" />
                 
                 <!-- Delete profile button -->
                 <Button x:Name="DeleteProfileButton" 
@@ -71,14 +158,19 @@
         <Button x:Name="CrosshairsButton" Content="Crosshairs" Margin="0,10,0,10" Click="CrosshairsButton_Click"/>
         <WrapPanel x:Name="CrosshairsPanel" Visibility="Collapsed" Margin="0,0,0,10"/>
         <TextBlock Text="Game Window Name" />
-        <ComboBox x:Name="GameComboBox" Margin="0,0,0,10">
+        <ComboBox x:Name="GameComboBox" 
+                  Margin="0,0,0,10"
+                  Template="{StaticResource ClickableComboBoxTemplate}">
             <ComboBoxItem Content="Center on screen" IsSelected="True"/>
             <ComboBoxItem Content="Notatnik"/>
             <ComboBoxItem Content="Rust"/>
         </ComboBox>
 
         <TextBlock Text="Crosshair Color" Margin="0,10,0,0"/>
-        <ComboBox x:Name="ColorComboBox" SelectionChanged="ColorComboBox_SelectionChanged" Margin="0,0,0,10" >
+        <ComboBox x:Name="ColorComboBox" 
+                  SelectionChanged="ColorComboBox_SelectionChanged" 
+                  Margin="0,0,0,10"
+                  Template="{StaticResource ClickableComboBoxTemplate}">
             <ComboBoxItem Content="Red" IsSelected="True"/>
             <ComboBoxItem Content="Green"/>
             <ComboBoxItem Content="Blue"/>
@@ -87,11 +179,11 @@
             <ComboBoxItem Content="Cyan"/>
             <ComboBoxItem Content="Magenta"/>
         </ComboBox>
-
+        
         <!-- Thickness slider row -->
         <TextBlock Text="Crosshair Thickness" Margin="0,10,0,0"/>
         <StackPanel Orientation="Horizontal">
-            <Slider x:Name="ThicknessSlider" Minimum="1" Maximum="10" ValueChanged="ThicknessSlider_ValueChanged" Width="230"/>
+            <Slider x:Name="ThicknessSlider" Minimum="0.1" Maximum="10" ValueChanged="ThicknessSlider_ValueChanged" Width="230"/>
             <TextBlock Text="{Binding ElementName=ThicknessSlider, Path=Value, StringFormat={}{0:F2}}"
                        Margin="10,0,0,0"
                        VerticalAlignment="Center"
