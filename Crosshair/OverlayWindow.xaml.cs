@@ -23,75 +23,93 @@ namespace Crosshair
 
     public partial class OverlayWindow : Window
     {
-        private Line LineTop, LineBottom, LineLeft, LineRight;
+        // UI elements
+        private Line LineTop;
+        private Line LineBottom;
+        private Line LineLeft;
+        private Line LineRight;
         private Ellipse Circle;
+        private Canvas canvas;
+        
+        // Current settings
         private CrosshairType currentType = CrosshairType.Classic;
+        private double currentSize = 20;
+        private MediaColor currentColor = MediaColors.Red;
+        private double currentThickness = 2;
 
-        // Import necessary user32.dll functions for window style manipulation
-        const int GWL_EXSTYLE = -20;
-        const int WS_EX_TRANSPARENT = 0x00000020;
-        const int WS_EX_TOOLWINDOW = 0x00000080;
-        const int WS_EX_NOACTIVATE = 0x08000000;
+        // Window style constants
+        private const int GWL_EXSTYLE = -20;
+        private const int WS_EX_TRANSPARENT = 0x00000020;
+        private const int WS_EX_TOOLWINDOW = 0x00000080;
+        private const int WS_EX_NOACTIVATE = 0x08000000;
 
         [DllImport("user32.dll")]
-        static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
         [DllImport("user32.dll")]
-        static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
         public OverlayWindow()
         {
             InitializeComponent();
+            InitializeWindow();
+            InitializeCrosshair();
+        }
 
+        private void InitializeWindow()
+        {
             // Configure window for transparency and overlay behavior
-            this.WindowStyle = WindowStyle.None;
-            this.AllowsTransparency = true;
-            this.Background = MediaBrushes.Transparent;
-            this.Topmost = true;
-            this.ShowInTaskbar = false;
-            this.Width = 200;
-            this.Height = 200;
+            WindowStyle = WindowStyle.None;
+            AllowsTransparency = true;
+            Background = MediaBrushes.Transparent;
+            Topmost = true;
+            ShowInTaskbar = false;
+            Width = 200;
+            Height = 200;
+            Cursor = System.Windows.Input.Cursors.None;
+        }
 
-            // Initialize crosshair shapes
+        private void InitializeCrosshair()
+        {
+            // Create crosshair elements
             LineTop = new Line();
             LineBottom = new Line();
             LineLeft = new Line();
             LineRight = new Line();
             Circle = new Ellipse();
 
-            var canvas = new Canvas();
+            // Add to canvas
+            canvas = new Canvas();
             canvas.Children.Add(LineTop);
             canvas.Children.Add(LineBottom);
             canvas.Children.Add(LineLeft);
             canvas.Children.Add(LineRight);
             canvas.Children.Add(Circle);
-            this.Content = canvas;
+            Content = canvas;
 
-            // Set default crosshair settings
-            SetColor(Colors.Red);
-            SetThickness(2);
-            SetSize(20);
-            SetCrosshairType(CrosshairType.Classic);
+            // Initial visibility
             SetVisible(true);
-            CenterOnScreen();
-
-            this.Cursor = System.Windows.Input.Cursors.None;
         }
 
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
 
+            // Make window click-through and hidden from alt-tab
             var hwnd = new WindowInteropHelper(this).Handle;
             int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
             exStyle |= WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
             SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
         }
 
-        public void SetColor(System.Windows.Media.Color color)
+        public void SetColor(MediaColor color)
         {
-            // Set stroke color for all crosshair elements
+            currentColor = color;
+            
+            // Create brush from color
             SolidColorBrush brush = new SolidColorBrush(color);
+            
+            // Apply to all elements
             LineTop.Stroke = brush;
             LineBottom.Stroke = brush;
             LineLeft.Stroke = brush;
@@ -101,20 +119,24 @@ namespace Crosshair
 
         public void SetThickness(double thickness)
         {
-            // Set stroke thickness for all crosshair elements
+            currentThickness = thickness;
+            
+            // Apply thickness to elements
             LineTop.StrokeThickness = thickness;
             LineBottom.StrokeThickness = thickness;
             LineLeft.StrokeThickness = thickness;
             LineRight.StrokeThickness = thickness;
-            Circle.StrokeThickness = thickness / 2; // Optionally use a thinner circle
+            Circle.StrokeThickness = thickness / 2; // Thinner circle
         }
 
         public void SetSize(double size)
         {
-            double centerX = this.Width / 2;
-            double centerY = this.Height / 2;
+            currentSize = size;
+            
+            double centerX = Width / 2;
+            double centerY = Height / 2;
 
-            // Draw only the visible lines based on the current crosshair type
+            // Update line positions based on size
             if (LineTop.Visibility == Visibility.Visible)
             {
                 LineTop.X1 = centerX; LineTop.Y1 = centerY - size;
@@ -141,11 +163,10 @@ namespace Crosshair
 
             if (Circle.Visibility == Visibility.Visible)
             {
-                double circleDiameter = size;
-                Circle.Width = circleDiameter;
-                Circle.Height = circleDiameter;
-                Canvas.SetLeft(Circle, centerX - circleDiameter / 2);
-                Canvas.SetTop(Circle, centerY - circleDiameter / 2);
+                Circle.Width = size;
+                Circle.Height = size;
+                Canvas.SetLeft(Circle, centerX - size / 2);
+                Canvas.SetTop(Circle, centerY - size / 2);
             }
         }
 
@@ -153,46 +174,83 @@ namespace Crosshair
         {
             currentType = type;
 
-            // Make all elements visible by default
-            LineTop.Visibility = LineBottom.Visibility = LineLeft.Visibility = LineRight.Visibility = Circle.Visibility = Visibility.Visible;
+            // Reset all elements to visible
+            LineTop.Visibility = Visibility.Visible;
+            LineBottom.Visibility = Visibility.Visible;
+            LineLeft.Visibility = Visibility.Visible;
+            LineRight.Visibility = Visibility.Visible;
+            Circle.Visibility = Visibility.Visible;
 
+            // Apply type-specific visibility
             switch (type)
             {
                 case CrosshairType.Classic:
-                    // All elements are visible
+                    // All elements visible (default)
                     break;
+                    
                 case CrosshairType.Dot:
-                    // Only the dot (circle) is visible
-                    LineTop.Visibility = LineBottom.Visibility = LineLeft.Visibility = LineRight.Visibility = Visibility.Hidden;
+                    // Only circle visible
+                    LineTop.Visibility = Visibility.Hidden;
+                    LineBottom.Visibility = Visibility.Hidden;
+                    LineLeft.Visibility = Visibility.Hidden;
+                    LineRight.Visibility = Visibility.Hidden;
                     break;
+                    
                 case CrosshairType.Cross:
-                    // Hide the circle, show cross lines
+                    // Lines only
                     Circle.Visibility = Visibility.Hidden;
                     break;
+                    
                 case CrosshairType.TShape:
-                    // Hide the bottom line and the circle
+                    // T-shape (no bottom line or circle)
                     LineBottom.Visibility = Visibility.Hidden;
                     Circle.Visibility = Visibility.Hidden;
                     break;
             }
 
-            // Redraw crosshair with the current size
-            SetSize(Width / 10); // Default proportional size, can be adjusted
+            // Apply current size to update positions
+            SetSize(currentSize);
         }
 
         public void CenterOnScreen()
         {
-            // Center the overlay window on the primary screen
-            var screenWidth = SystemParameters.PrimaryScreenWidth;
-            var screenHeight = SystemParameters.PrimaryScreenHeight;
-            this.Left = (screenWidth - this.Width) / 2;
-            this.Top = (screenHeight - this.Height) / 2;
+            // Center on primary screen
+            Left = (SystemParameters.PrimaryScreenWidth - Width) / 2;
+            Top = (SystemParameters.PrimaryScreenHeight - Height) / 2;
         }
 
         public void SetVisible(bool visible)
         {
-            // Show or hide the overlay window
-            this.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+            Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+        }
+
+        public CrosshairType GetCurrentCrosshairType()
+        {
+            return currentType;
+        }
+
+        public double GetCurrentSize()
+        {
+            return currentSize;
+        }
+
+        public double GetCurrentThickness()
+        {
+            return currentThickness;
+        }
+
+        public MediaColor GetCurrentColor()
+        {
+            return currentColor;
+        }
+
+        // Apply all settings in one call
+        public void ApplySettings(MediaColor color, double thickness, double size, CrosshairType type)
+        {
+            SetColor(color);
+            SetThickness(thickness);
+            SetSize(size);
+            SetCrosshairType(type);
         }
     }
 }

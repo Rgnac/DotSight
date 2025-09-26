@@ -25,14 +25,41 @@ namespace Crosshair
         private NotifyIcon trayIcon;
         private ContextMenuStrip trayMenu;
 
+        private string currentProfileName = "Default";
+
         public MainWindow()
         {
             InitializeComponent();
 
+            // Create overlay but don't show it yet
             overlay = new OverlayWindow();
-            overlay.Show();
 
-            overlay.CenterOnScreen();
+            try
+            {
+                // Load last used profile from config (passing null loads the last used profile)
+                var settings = CrosshairSettings.LoadSettings();
+                
+                // Set current profile name to whatever was loaded
+                currentProfileName = settings.Name;
+                System.Diagnostics.Debug.WriteLine($"Loading last used profile: {currentProfileName}");
+                
+                // Apply settings before showing the overlay
+                ApplySettings(settings);
+                
+                // Now show the overlay
+                overlay.Show();
+                overlay.CenterOnScreen();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading initial settings: {ex.Message}");
+                
+                // If loading settings fails, apply basic defaults and show
+                overlay.ApplySettings(MediaColors.Red, 2, 20, CrosshairType.Classic);
+                overlay.Show();
+                overlay.CenterOnScreen();
+            }
+
             // Initialize tray icon and menu
             trayMenu = new ContextMenuStrip();
             trayMenu.Items.Add("Exit", null, OnTrayExitClick);
@@ -65,6 +92,9 @@ namespace Crosshair
             timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
             timer.Tick += Timer_Tick;
             timer.Start();
+
+            // Load profiles into combobox
+            RefreshProfilesList();
         }
         private void OnTrayExitClick(object sender, EventArgs e)
         {
@@ -132,7 +162,7 @@ namespace Crosshair
 
         private void ThicknessSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            overlay?.SetThickness(ThicknessSlider.Value);
+            overlay?.SetThickness(ThicknessSlider.Value); // Fixed from ThicnessSlider
         }
 
         private void SizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -230,6 +260,254 @@ namespace Crosshair
             }
         }
 
+        private void SaveSettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var settings = new CrosshairSettings
+            {
+                Name = currentProfileName,
+                CrosshairEnabled = CrosshairToggle.IsChecked ?? true,
+                SelectedGameWindow = (GameComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Center on screen",
+                SelectedColor = (ColorComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Red",
+                CrosshairThickness = ThicknessSlider.Value, // Fixed from ThicnessSlider
+                CrosshairSize = SizeSlider.Value,
+                CrosshairType = overlay.GetCurrentCrosshairType()
+            };
 
+            CrosshairSettings.SaveSettings(settings);
+            System.Windows.MessageBox.Show($"Profile '{currentProfileName}' saved successfully.", "DotSight", 
+        MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void RefreshProfilesList()
+        {
+            var profiles = CrosshairSettings.GetProfileNames();
+            ProfileComboBox.Items.Clear();
+
+            foreach (var profile in profiles)
+            {
+                ProfileComboBox.Items.Add(profile);
+            }
+
+            // Select the current profile
+            int index = profiles.IndexOf(currentProfileName);
+            if (index >= 0)
+            {
+                ProfileComboBox.SelectedIndex = index;
+            }
+            else
+            {
+                // Default to the first item if current profile not found
+                ProfileComboBox.SelectedIndex = 0;
+            }
+        }
+
+        private void ProfileComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ProfileComboBox.SelectedItem != null)
+            {
+                try
+                {
+                    // Get the selected profile name
+                    string profileName = ProfileComboBox.SelectedItem.ToString();
+                    
+                    // Don't reload if it's the same profile
+                    if (profileName == currentProfileName)
+                        return;
+                    
+                    System.Diagnostics.Debug.WriteLine($"Profile selection changed from {currentProfileName} to {profileName}");
+                    
+                    // Set the current profile name
+                    currentProfileName = profileName;
+                    
+                    // Load the selected profile
+                    var settings = CrosshairSettings.LoadSettings(profileName);
+                    if (settings != null)
+                    {
+                        // Loading the profile automatically updates the last used setting in our new code
+                        System.Diagnostics.Debug.WriteLine($"Successfully loaded profile: {profileName}, Size: {settings.CrosshairSize}");
+                        ApplySettings(settings);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error in ProfileComboBox_SelectionChanged: {ex.Message}");
+                }
+            }
+        }
+
+        private void DeleteProfileButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ProfileComboBox.SelectedItem != null)
+            {
+                string profileName = ProfileComboBox.SelectedItem.ToString();
+                
+                if (profileName == "Default")
+                {
+                    System.Windows.MessageBox.Show("Cannot delete the Default profile.", "DotSight",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                
+                var result = System.Windows.MessageBox.Show($"Are you sure you want to delete the '{profileName}' profile?",
+                    "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    
+                if (result == MessageBoxResult.Yes)
+                {
+                    if (CrosshairSettings.DeleteProfile(profileName))
+                    {
+                        // If we deleted the current profile, switch to Default
+                        if (currentProfileName == profileName)
+                        {
+                            currentProfileName = "Default";
+                        }
+                        
+                        RefreshProfilesList();
+                        
+                        // Ensure Default is selected after deletion
+                        foreach (var item in ProfileComboBox.Items)
+                        {
+                            if (item.ToString() == "Default")
+                            {
+                                ProfileComboBox.SelectedItem = item;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void CreateNewButton_Click(object sender, RoutedEventArgs e)
+        {
+            string newProfileName = NewProfileNameTextBox.Text?.Trim();
+    
+            if (string.IsNullOrEmpty(newProfileName))
+            {
+                System.Windows.MessageBox.Show("Please enter a name for the new profile.", "DotSight",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+    
+            // Check if profile with this name already exists
+            var existingProfiles = CrosshairSettings.GetProfileNames();
+            if (existingProfiles.Contains(newProfileName))
+            {
+                System.Windows.MessageBox.Show($"A profile named '{newProfileName}' already exists.", "DotSight",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+    
+            // Save current settings under the new profile name
+            var settings = new CrosshairSettings
+            {
+                Name = newProfileName,
+                CrosshairEnabled = CrosshairToggle.IsChecked ?? true,
+                SelectedGameWindow = (GameComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Center on screen",
+                SelectedColor = (ColorComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Red",
+                CrosshairThickness = ThicknessSlider.Value, // Fixed from ThicnessSlider
+                CrosshairSize = SizeSlider.Value,
+                CrosshairType = overlay.GetCurrentCrosshairType()
+            };
+    
+            CrosshairSettings.SaveSettings(settings);
+            currentProfileName = newProfileName;
+    
+            // Clear the textbox and refresh the profiles list
+            NewProfileNameTextBox.Text = "";
+            RefreshProfilesList();
+    
+            // Select the newly created profile
+            foreach (var item in ProfileComboBox.Items)
+            {
+                if (item.ToString() == newProfileName)
+                {
+                    ProfileComboBox.SelectedItem = item;
+                    break;
+                }
+            }
+    
+            System.Windows.MessageBox.Show($"Profile '{newProfileName}' created successfully.", "DotSight", 
+        MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void ReloadProfileButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Reload the current profile (discarding any unsaved changes)
+            var settings = CrosshairSettings.LoadSettings(currentProfileName);
+            ApplySettings(settings);
+            System.Windows.MessageBox.Show($"Profile '{currentProfileName}' reloaded.", "DotSight", 
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void ApplySettings(CrosshairSettings settings)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"Applying settings for profile: {settings.Name}");
+                System.Diagnostics.Debug.WriteLine($"CrosshairSize: {settings.CrosshairSize}, Type: {settings.CrosshairType}");
+                
+                // Apply each setting to the UI and overlay
+                CrosshairToggle.IsChecked = settings.CrosshairEnabled;
+                
+                // Translate color string to actual MediaColor
+                MediaColor color = settings.SelectedColor switch
+                {
+                    "Red" => MediaColors.Red,
+                    "Green" => MediaColors.Green,
+                    "Blue" => MediaColors.Blue,
+                    "Yellow" => MediaColors.Yellow,
+                    "White" => MediaColors.White,
+                    "Cyan" => MediaColors.Cyan,
+                    "Magenta" => MediaColors.Magenta,
+                    _ => MediaColors.Red
+                };
+
+                // Set game window
+                foreach (ComboBoxItem item in GameComboBox.Items)
+                {
+                    if (item.Content.ToString() == settings.SelectedGameWindow)
+                    {
+                        GameComboBox.SelectedItem = item;
+                        break;
+                    }
+                }
+
+                // Set color in UI
+                foreach (ComboBoxItem item in ColorComboBox.Items)
+                {
+                    if (item.Content.ToString() == settings.SelectedColor)
+                    {
+                        ColorComboBox.SelectedItem = item;
+                        break;
+                    }
+                }
+
+                // Temporarily remove event handlers
+                ThicknessSlider.ValueChanged -= ThicknessSlider_ValueChanged;
+                SizeSlider.ValueChanged -= SizeSlider_ValueChanged;
+
+                // Update sliders
+                ThicknessSlider.Value = settings.CrosshairThickness;
+                SizeSlider.Value = settings.CrosshairSize;
+                
+                System.Diagnostics.Debug.WriteLine($"Set SizeSlider.Value to {settings.CrosshairSize}");
+
+                // Reattach event handlers
+                ThicknessSlider.ValueChanged += ThicknessSlider_ValueChanged;
+                SizeSlider.ValueChanged += SizeSlider_ValueChanged;
+
+                // CRITICAL: Apply all settings directly to the overlay in a single call
+                overlay.ApplySettings(color, settings.CrosshairThickness, settings.CrosshairSize, settings.CrosshairType);
+                
+                // Set visibility AFTER applying all other settings
+                overlay.SetVisible(settings.CrosshairEnabled);
+                
+                System.Diagnostics.Debug.WriteLine($"Updated overlay with Color: {settings.SelectedColor}, Thickness: {settings.CrosshairThickness}, Size: {settings.CrosshairSize}, Type: {settings.CrosshairType}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in ApplySettings: {ex.Message}");
+            }
+        }
     }
 }
