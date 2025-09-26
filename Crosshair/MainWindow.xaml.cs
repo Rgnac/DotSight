@@ -119,7 +119,36 @@ namespace Crosshair
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            if (targetHwnd == IntPtr.Zero) FindTargetWindow();
+            // Get selected window option
+            string selectedWindow = "Center on screen";
+            if (GameComboBox.SelectedItem is ComboBoxItem item)
+            {
+                selectedWindow = item.Content.ToString();
+            }
+            
+            // Handle "Center on screen" option specially
+            if (selectedWindow == "Center on screen")
+            {
+                // Center on screen and ensure visible
+                overlay.CenterOnScreen();
+                overlay.SetVisible(CrosshairToggle.IsChecked ?? false);
+                return;
+            }
+            
+            // For other options, try to find the window
+            FindTargetWindow();
+            
+            // If window not found or minimized, hide the crosshair
+            if (targetHwnd == IntPtr.Zero || IsWindowMinimized(targetHwnd))
+            {
+                overlay.SetVisible(false);
+                return;
+            }
+            
+            // Window found and not minimized, show crosshair if enabled
+            overlay.SetVisible(CrosshairToggle.IsChecked ?? false);
+            
+            // Position the crosshair on the window
             if (!GetWindowRect(targetHwnd, out RECT rect)) return;
 
             int winCenterX = rect.Left + (rect.Right - rect.Left) / 2;
@@ -127,6 +156,16 @@ namespace Crosshair
 
             overlay.Left = winCenterX - overlay.Width / 2;
             overlay.Top = winCenterY - overlay.Height / 2;
+        }
+
+        // Add this helper method to check if a window is minimized
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool IsIconic(IntPtr hWnd);
+
+        private bool IsWindowMinimized(IntPtr hWnd)
+        {
+            return IsIconic(hWnd);
         }
 
         private void FindTargetWindow()
@@ -138,6 +177,14 @@ namespace Crosshair
             }
 
             string desiredTitle = item.Content.ToString();
+            
+            // If "Center on screen" is selected, don't look for a window
+            if (desiredTitle == "Center on screen")
+            {
+                targetHwnd = IntPtr.Zero;
+                return;
+            }
+            
             targetHwnd = IntPtr.Zero;
 
             foreach (Process p in Process.GetProcesses())
@@ -145,8 +192,11 @@ namespace Crosshair
                 try
                 {
                     if (string.IsNullOrWhiteSpace(p.MainWindowTitle)) continue;
+                    
+                    // Skip minimized windows
+                    if (IsWindowMinimized(p.MainWindowHandle)) continue;
 
-                    // Partial title match
+                    // Partial title match (case insensitive)
                     if (p.MainWindowTitle.IndexOf(desiredTitle, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         targetHwnd = p.MainWindowHandle;
