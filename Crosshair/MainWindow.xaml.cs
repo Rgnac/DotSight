@@ -42,6 +42,7 @@ namespace Crosshair
             trayIcon.ContextMenuStrip = trayMenu;
             trayIcon.Visible = true;
             trayIcon.Text = "DotSight";
+            this.Show();
 
             // Double-clicking the tray icon restores the main window
             trayIcon.DoubleClick += (s, e) =>

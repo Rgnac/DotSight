@@ -1,0 +1,149 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Global FontFamily for the entire application -->
+    <FontFamily x:Key="GlobalFontFamily">pack://application:,,,/Crosshair/Assets/Fonts/Roboto-Regular.ttf#Roboto</FontFamily>
+
+    <!-- Gradient Brush from #D700FF to #8500FE -->
+    <LinearGradientBrush x:Key="VibrantGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#470087" Offset="0"/>
+        <GradientStop Color="#31005E" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Dark background and light foreground -->
+    <Color x:Key="DarkBackgroundColor">#1A1A1A</Color>
+    <Color x:Key="LightForegroundColor">#F5F5F5</Color>
+    <Color x:Key="DarkBackgroundColor_2">#0F001C</Color>
+    <Color x:Key="StartOfGradient">#470087</Color>
+    <Color x:Key="EndOfGradient">#31005E</Color>
+
+    <SolidColorBrush x:Key="DarkBackgroundBrush" Color="{StaticResource DarkBackgroundColor}"/>
+    <SolidColorBrush x:Key="LightForegroundBrush" Color="{StaticResource LightForegroundColor}"/>
+    <SolidColorBrush x:Key="DarkBackgroundBrush_2" Color="{StaticResource DarkBackgroundColor_2}"/>
+    <SolidColorBrush x:Key="StartOfGradientBrush" Color="{StaticResource StartOfGradient}"/>
+    <SolidColorBrush x:Key="EndOfGradientBrush" Color="{StaticResource EndOfGradient}"/>
+
+    <!-- Example style for Window -->
+    <Style TargetType="Window"> 
+        <Setter Property="FontFamily" Value="{StaticResource GlobalFontFamily}"/>
+        <Setter Property="Background" Value="{StaticResource DarkBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource LightForegroundBrush}"/>
+    </Style>
+
+    <!-- Example style for Button -->
+    <Style TargetType="Button">
+        <!-- Default appearance -->
+        <Setter Property="FontFamily" Value="{StaticResource GlobalFontFamily}"/>
+        <Setter Property="Background" Value="{StaticResource VibrantGradientBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource LightForegroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource VibrantGradientBrush}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+
+        <!-- Custom template -->
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="4"
+                        Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Content="{TemplateBinding Content}"
+                                      RecognizesAccessKey="True"/>
+                    </Border>
+
+                    <!-- Hover & pressed states -->
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource StartOfGradientBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource EndOfGradientBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+    <!-- Example style for TextBlock (system default for comparison) -->
+    <Style TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource LightForegroundBrush}"/>
+    </Style>
+
+    <!-- Style for ComboBox with vibrant gradient background and white font -->
+    <Style TargetType="ComboBox">
+        <Setter Property="FontFamily" Value="{StaticResource GlobalFontFamily}"/>
+        <Setter Property="Foreground" Value="{StaticResource LightForegroundBrush}"/>
+        <Setter Property="Background" Value="{StaticResource VibrantGradientBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource VibrantGradientBrush}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="Padding" Value="6,2"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ComboBoxItem">
+                    <Setter Property="FontFamily" Value="{StaticResource GlobalFontFamily}"/>
+                    <Setter Property="Foreground" Value="{StaticResource LightForegroundBrush}"/>
+                    <Setter Property="Background" Value="{StaticResource VibrantGradientBrush}"/>
+                </Style>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <Border
+                            x:Name="MainBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4" />
+                        <ContentPresenter
+                            Margin="6,2,30,2"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Left"
+                            Content="{TemplateBinding SelectionBoxItem}"
+                            ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                            ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" />
+                        <ToggleButton
+                            x:Name="ToggleButton"
+                            Grid.Column="1"
+                            Focusable="False"
+                            IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                            Background="{StaticResource VibrantGradientBrush}"
+                            BorderBrush="{StaticResource LightForegroundBrush}"
+                            BorderThickness="1"
+                            Width="24"
+                            Height="24"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                            <Path Data="M 0 0 L 8 8 L 16 0 Z" Fill="{StaticResource LightForegroundBrush}" Stretch="Uniform" Width="12" Height="8" Margin="6,8,6,8"/>
+                        </ToggleButton>
+                        <Popup
+                            IsOpen="{TemplateBinding IsDropDownOpen}"
+                            Placement="Bottom"
+                            AllowsTransparency="True"
+                            Focusable="False">
+                            <Border
+                                Background="{StaticResource VibrantGradientBrush}"
+                                BorderBrush="{StaticResource VibrantGradientBrush}"
+                                BorderThickness="2"
+                                CornerRadius="4">
+                                <ScrollViewer>
+                                    <ItemsPresenter/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

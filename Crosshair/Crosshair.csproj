@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <None Remove="Assets\crosshair.ico" />
+    <None Remove="Assets\Fonts\Roboto-Bold.ttf" />
+    <None Remove="Assets\Fonts\Roboto-Regular.ttf" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +42,8 @@
     <Resource Include="Assets\crosshair.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Assets\Fonts\Roboto-Bold.ttf" />
+    <Resource Include="Assets\Fonts\Roboto-Regular.ttf" />
   </ItemGroup>
 
 </Project>
