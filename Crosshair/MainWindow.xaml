@@ -126,19 +126,53 @@
                     <TextBox.Style>
                         <Style TargetType="TextBox">
                             <Setter Property="Foreground" Value="{StaticResource LightForegroundBrush}"/>
-                            <Style.Triggers>
-                                <Trigger Property="Text" Value="">
-                                    <Setter Property="Background">
-                                        <Setter.Value>
-                                            <VisualBrush Stretch="None" AlignmentX="Left" AlignmentY="Center">
-                                                <VisualBrush.Visual>
-                                                    <TextBlock Text="New profile name..." Foreground="Gray"/>
-                                                </VisualBrush.Visual>
-                                            </VisualBrush>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Trigger>
-                            </Style.Triggers>
+                            <Setter Property="Background" Value="{StaticResource DarkBackgroundBrush_2}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource VibrantGradientBrush}"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="CaretBrush" Value="{StaticResource LightForegroundBrush}"/>
+                            <Setter Property="SelectionBrush" Value="{StaticResource StartOfGradientBrush}"/>
+                            <Setter Property="SelectionTextBrush" Value="{StaticResource LightForegroundBrush}"/>
+                            <Setter Property="Padding" Value="5,2"/>
+                            
+                            <!-- Custom control template to handle focus without changing background -->
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <Border x:Name="border" 
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="4">
+                                            <Grid>
+                                                <!-- Placeholder text -->
+                                                <TextBlock x:Name="placeholder" 
+                                                           Text="New profile name..." 
+                                                           Foreground="Gray" 
+                                                           Padding="5,2,0,0" 
+                                                           Visibility="Collapsed"/>
+                                                
+                                                <!-- Actual text entry -->
+                                                <ScrollViewer x:Name="PART_ContentHost" 
+                                                              Focusable="False" 
+                                                              Background="Transparent"
+                                                              Padding="{TemplateBinding Padding}"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource StartOfGradientBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource StartOfGradientBrush}"/>
+                                                <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                            </Trigger>
+                                            <Trigger Property="Text" Value="">
+                                                <Setter TargetName="placeholder" Property="Visibility" Value="Visible"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
                     </TextBox.Style>
                 </TextBox>

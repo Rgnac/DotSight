@@ -30,7 +30,15 @@ namespace Crosshair
         public MainWindow()
         {
             InitializeComponent();
-
+            this.Topmost = true;
+            System.Threading.Tasks.Task.Delay(1).ContinueWith(t =>
+            {
+                // Switch to UI thread to modify the property
+                this.Dispatcher.Invoke(() =>
+                {
+                    this.Topmost = false;
+                });
+            });
             // Create overlay but don't show it yet
             overlay = new OverlayWindow();
 
