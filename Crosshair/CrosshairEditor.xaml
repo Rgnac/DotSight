@@ -1,0 +1,148 @@
+﻿<!-- CrosshairEditor.xaml -->
+<Window x:Class="Crosshair.CrosshairEditor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Custom Crosshair Editor" Height="600" Width="800"
+        Background="{StaticResource DarkBackgroundBrush_2}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="250"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Tools Panel -->
+        <StackPanel Grid.Column="0" Margin="10">
+            <TextBlock Text="TOOLS" Foreground="{StaticResource LightForegroundBrush}" 
+                       FontWeight="Bold" Margin="0,0,0,10"/>
+
+            <Button Content="Add Line" Margin="0,5" Click="AddLine_Click"/>
+            <Button Content="Add Circle" Margin="0,5" Click="AddCircle_Click"/>
+            <Button Content="Add Rectangle" Margin="0,5" Click="AddRectangle_Click"/>
+
+            <Separator Margin="0,10"/>
+
+            <Button Content="Delete Selected" Margin="0,5" Click="DeleteSelected_Click"/>
+            <Button Content="Clear All" Margin="0,5" Click="ClearAll_Click"/>
+
+            <Separator Margin="0,10"/>
+
+            <TextBlock Text="SAVE CROSSHAIR" Foreground="{StaticResource LightForegroundBrush}" 
+                       FontWeight="Bold" Margin="0,10,0,5"/>
+
+            <TextBlock Text="Name:" Foreground="{StaticResource LightForegroundBrush}" Margin="0,5"/>
+            <TextBox x:Name="CrosshairNameTextBox" Margin="0,0,0,10"/>
+
+            <Button Content="Save Crosshair" Margin="0,5" Click="SaveCrosshair_Click"/>
+            <Button Content="Load Existing" Margin="0,5" Click="LoadExisting_Click"/>
+        </StackPanel>
+
+        <!-- Editor Canvas -->
+        <Border Grid.Column="1" Background="#0F001C" BorderBrush="Gray" BorderThickness="1" Margin="10">
+            <Canvas x:Name="EditorCanvas" Width="400" Height="400" Background="Transparent">
+                <!-- Grid lines to show center -->
+                <Line X1="0" Y1="200" X2="400" Y2="200" Stroke="Gray" StrokeThickness="1" Opacity="0.3"/>
+                <Line X1="200" Y1="0" X2="200" Y2="400" Stroke="Gray" StrokeThickness="1" Opacity="0.3"/>
+            </Canvas>
+        </Border>
+
+        <!-- Properties Panel -->
+        <StackPanel Grid.Column="2" Margin="10">
+            <TextBlock Text="PROPERTIES" Foreground="{StaticResource LightForegroundBrush}" 
+                       FontWeight="Bold" Margin="0,0,0,10"/>
+
+            <TextBlock Text="No element selected" x:Name="NoSelectionText" 
+                       Foreground="{StaticResource LightForegroundBrush}"
+                       Visibility="Visible"/>
+
+            <StackPanel x:Name="PropertiesPanel" Visibility="Collapsed">
+                <TextBlock Text="Position:" Foreground="{StaticResource LightForegroundBrush}" Margin="0,5"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="X:" Foreground="{StaticResource LightForegroundBrush}" 
+                               Grid.Column="0" VerticalAlignment="Center"/>
+                    <TextBox x:Name="XPositionTextBox" Grid.Column="1" Margin="5,0,10,0" 
+                             TextChanged="Position_TextChanged"/>
+
+                    <TextBlock Text="Y:" Foreground="{StaticResource LightForegroundBrush}" 
+                               Grid.Column="2" VerticalAlignment="Center"/>
+                    <TextBox x:Name="YPositionTextBox" Grid.Column="3" Margin="5,0,0,0" 
+                             TextChanged="Position_TextChanged"/>
+                </Grid>
+
+                <!-- Size panel (shown for circles/rectangles) -->
+                <StackPanel x:Name="SizePanel">
+                    <TextBlock Text="Size:" Foreground="{StaticResource LightForegroundBrush}" Margin="0,10,0,5"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="Width:" Foreground="{StaticResource LightForegroundBrush}" 
+                                   Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="WidthTextBox" Grid.Column="1" Margin="5,0,10,0" 
+                                 TextChanged="Size_TextChanged"/>
+
+                        <TextBlock Text="Height:" Foreground="{StaticResource LightForegroundBrush}" 
+                                   Grid.Column="2" VerticalAlignment="Center"/>
+                        <TextBox x:Name="HeightTextBox" Grid.Column="3" Margin="5,0,0,0" 
+                                 TextChanged="Size_TextChanged"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- End position panel (shown for lines) -->
+                <StackPanel x:Name="EndPositionPanel">
+                    <TextBlock Text="End Position:" Foreground="{StaticResource LightForegroundBrush}" Margin="0,10,0,5"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="X2:" Foreground="{StaticResource LightForegroundBrush}" 
+                                   Grid.Column="0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="X2PositionTextBox" Grid.Column="1" Margin="5,0,10,0" 
+                                 TextChanged="EndPosition_TextChanged"/>
+
+                        <TextBlock Text="Y2:" Foreground="{StaticResource LightForegroundBrush}" 
+                                   Grid.Column="2" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Y2PositionTextBox" Grid.Column="3" Margin="5,0,0,0" 
+                                 TextChanged="EndPosition_TextChanged"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Common properties -->
+                <TextBlock Text="Thickness:" Foreground="{StaticResource LightForegroundBrush}" Margin="0,10,0,5"/>
+                <Slider x:Name="ThicknessSlider" Minimum="0.5" Maximum="10" Value="2"
+                        ValueChanged="ThicknessSlider_ValueChanged"/>
+
+                <TextBlock Text="Color:" Foreground="{StaticResource LightForegroundBrush}" Margin="0,10,0,5"/>
+                <ComboBox x:Name="ColorComboBox" SelectionChanged="ColorComboBox_SelectionChanged">
+                    <ComboBoxItem Content="Red" IsSelected="True"/>
+                    <ComboBoxItem Content="Green"/>
+                    <ComboBoxItem Content="Blue"/>
+                    <ComboBoxItem Content="Yellow"/>
+                    <ComboBoxItem Content="White"/>
+                    <ComboBoxItem Content="Cyan"/>
+                    <ComboBoxItem Content="Magenta"/>
+                </ComboBox>
+
+                <CheckBox x:Name="FilledCheckBox" Content="Filled" Foreground="{StaticResource LightForegroundBrush}"
+                          Margin="0,10,0,0" Checked="FilledCheckBox_CheckedChanged" Unchecked="FilledCheckBox_CheckedChanged"/>
+            </StackPanel>
+
+            <Button Content="Apply to Crosshair" Margin="0,20,0,0" Click="ApplyCrosshair_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

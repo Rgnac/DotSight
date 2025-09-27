@@ -567,5 +567,45 @@ namespace Crosshair
                 System.Diagnostics.Debug.WriteLine($"Error in ApplySettings: {ex.Message}");
             }
         }
+
+        private void CustomCrosshairButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Create and show the crosshair editor
+            var editor = new CrosshairEditor();
+            
+            // Show as dialog so it blocks interaction with main window until closed
+            if (editor.ShowDialog() == true)
+            {
+                // If the user clicked "Apply to Crosshair", load the custom crosshair
+                // Get the name from the editor's text box
+                string customName = editor.CrosshairNameTextBox.Text.Trim();
+                if (!string.IsNullOrEmpty(customName))
+                {
+                    // Try to load the custom crosshair file
+                    string filePath = System.IO.Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        "DotSight", "Crosshairs", $"{customName}.json");
+                        
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        try
+                        {
+                            string json = System.IO.File.ReadAllText(filePath);
+                            CustomCrosshair crosshair = System.Text.Json.JsonSerializer.Deserialize<CustomCrosshair>(json);
+                            
+                            if (crosshair != null)
+                            {
+                                // Set the crosshair type to Custom
+                                overlay.SetCrosshairType(CrosshairType.Custom, crosshair);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Windows.MessageBox.Show($"Error loading custom crosshair: {ex.Message}", "Error");
+                        }
+                    }
+                }
+            }
+        }
     }
 }

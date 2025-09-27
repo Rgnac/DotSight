@@ -18,7 +18,8 @@ namespace Crosshair
         Classic,
         Dot,
         Cross,
-        TShape
+        TShape,
+        Custom
     }
 
     public partial class OverlayWindow : Window
@@ -251,6 +252,157 @@ namespace Crosshair
             SetThickness(thickness);
             SetSize(size);
             SetCrosshairType(type);
+        }
+        // New method to set a custom crosshair
+        public void SetCustomCrosshair(CustomCrosshair customCrosshair)
+        {
+            // Clear existing elements
+            canvas.Children.Clear();
+            
+            // Add each custom element
+            double centerX = Width / 2;
+            double centerY = Height / 2;
+            
+            foreach (var element in customCrosshair.Elements)
+            {
+                // Convert string color to MediaColor
+                var colorConverter = new BrushConverter();
+                var brush = (SolidColorBrush)colorConverter.ConvertFromString(element.Color) ?? new SolidColorBrush(MediaColors.Red);
+                
+                switch (element.ElementType)
+                {
+                    case "Line":
+                        var line = new Line
+                        {
+                            X1 = centerX + (element.X1 * currentSize / 20),
+                            Y1 = centerY + (element.Y1 * currentSize / 20),
+                            X2 = centerX + (element.X2 * currentSize / 20),
+                            Y2 = centerY + (element.Y2 * currentSize / 20),
+                            StrokeThickness = element.Thickness * currentThickness,
+                            Stroke = brush
+                        };
+                        canvas.Children.Add(line);
+                        break;
+                        
+                    case "Circle":
+                        var ellipse = new Ellipse
+                        {
+                            Width = element.Width * currentSize / 20,
+                            Height = element.Height * currentSize / 20,
+                            StrokeThickness = element.Thickness * currentThickness,
+                            Stroke = brush
+                        };
+                        
+                        if (element.IsFilled)
+                        {
+                            ellipse.Fill = brush;
+                        }
+                        
+                        Canvas.SetLeft(ellipse, centerX + (element.X1 * currentSize / 20) - (ellipse.Width / 2));
+                        Canvas.SetTop(ellipse, centerY + (element.Y1 * currentSize / 20) - (ellipse.Height / 2));
+                        canvas.Children.Add(ellipse);
+                        break;
+                        
+                    case "Rectangle":
+                        var rectangle = new System.Windows.Shapes.Rectangle
+                        {
+                            Width = element.Width * currentSize / 20,
+                            Height = element.Height * currentSize / 20,
+                            StrokeThickness = element.Thickness * currentThickness,
+                            Stroke = brush
+                        };
+                        
+                        if (element.IsFilled)
+                        {
+                            rectangle.Fill = brush;
+                        }
+                        
+                        Canvas.SetLeft(rectangle, centerX + (element.X1 * currentSize / 20) - (rectangle.Width / 2));
+                        Canvas.SetTop(rectangle, centerY + (element.Y1 * currentSize / 20) - (rectangle.Height / 2));
+                        canvas.Children.Add(rectangle);
+                        break;
+                }
+            }
+            
+            currentType = CrosshairType.Custom;
+        }
+
+        // Update the SetCrosshairType method to handle the Custom type
+        public void SetCrosshairType(CrosshairType type, CustomCrosshair customData = null)
+        {
+            if (type == CrosshairType.Custom && customData != null)
+            {
+                SetCustomCrosshair(customData);
+                return;
+            }
+            
+            // Reset all elements to visible
+            canvas.Children.Clear();
+            
+            // Re-add standard elements
+            LineTop = new Line();
+            LineBottom = new Line();
+            LineLeft = new Line();
+            LineRight = new Line();
+            Circle = new Ellipse();
+            
+            canvas.Children.Add(LineTop);
+            canvas.Children.Add(LineBottom);
+            canvas.Children.Add(LineLeft);
+            canvas.Children.Add(LineRight);
+            canvas.Children.Add(Circle);
+            
+            currentType = type;
+
+            // Reset all elements to visible
+            LineTop.Visibility = Visibility.Visible;
+            LineBottom.Visibility = Visibility.Visible;
+            LineLeft.Visibility = Visibility.Visible;
+            LineRight.Visibility = Visibility.Visible;
+            Circle.Visibility = Visibility.Visible;
+
+            // Apply type-specific visibility
+            switch (type)
+            {
+                case CrosshairType.Classic:
+                    // All elements visible (default)
+                    break;
+                    
+                case CrosshairType.Dot:
+                    // Only circle visible
+                    LineTop.Visibility = Visibility.Hidden;
+                    LineBottom.Visibility = Visibility.Hidden;
+                    LineLeft.Visibility = Visibility.Hidden;
+                    LineRight.Visibility = Visibility.Hidden;
+                    break;
+                    
+                case CrosshairType.Cross:
+                    // Lines only
+                    Circle.Visibility = Visibility.Hidden;
+                    break;
+                    
+                case CrosshairType.TShape:
+                    // T-shape (no bottom line or circle)
+                    LineBottom.Visibility = Visibility.Hidden;
+                    Circle.Visibility = Visibility.Hidden;
+                    break;
+            }
+
+            // Set color and thickness
+            SetColor(currentColor);
+            SetThickness(currentThickness);
+            
+            // Apply current size to update positions
+            SetSize(currentSize);
+        }
+
+        // Update ApplySettings to handle custom crosshairs
+        public void ApplySettings(MediaColor color, double thickness, double size, CrosshairType type, CustomCrosshair customData = null)
+        {
+            SetColor(color);
+            SetThickness(thickness);
+            SetSize(size);
+            SetCrosshairType(type, customData);
         }
     }
 }

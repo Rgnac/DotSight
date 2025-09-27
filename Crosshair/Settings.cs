@@ -17,6 +17,8 @@ namespace Crosshair
         private static readonly string DefaultSettingsPath = Path.Combine(SettingsDirectory, "settings.json");
         private static readonly string ProfilesDirectory = Path.Combine(SettingsDirectory, "Profiles");
         private static readonly string ConfigPath = Path.Combine(SettingsDirectory, "config.json");
+        // Add this static property to store all custom crosshairs
+        private static readonly string CustomCrosshairsPath = Path.Combine(SettingsDirectory, "CustomCrosshairs");
 
         // Settings properties
         public string Name { get; set; } = "Default";
@@ -26,6 +28,8 @@ namespace Crosshair
         public double CrosshairThickness { get; set; } = 2;
         public double CrosshairSize { get; set; } = 20;
         public CrosshairType CrosshairType { get; set; } = CrosshairType.Classic;
+        // Add this property to CrosshairSettings class
+        public CustomCrosshair CustomCrosshairData { get; set; } = new CustomCrosshair();
 
         // App configuration class for storing last used profile
         public class AppConfig
@@ -226,6 +230,83 @@ namespace Crosshair
                 System.Diagnostics.Debug.WriteLine($"Error deleting profile: {ex.Message}");
             }
             
+            return false;
+        }
+
+        // Method to save a custom crosshair
+        public static void SaveCustomCrosshair(CustomCrosshair crosshair)
+        {
+            try
+            {
+                Directory.CreateDirectory(CustomCrosshairsPath);
+                string filePath = Path.Combine(CustomCrosshairsPath, $"{crosshair.Name}.json");
+                string jsonString = JsonSerializer.Serialize(crosshair, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                });
+                File.WriteAllText(filePath, jsonString);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving custom crosshair: {ex.Message}");
+            }
+        }
+
+        // Method to load a custom crosshair
+        public static CustomCrosshair LoadCustomCrosshair(string name)
+        {
+            try
+            {
+                string filePath = Path.Combine(CustomCrosshairsPath, $"{name}.json");
+                if (File.Exists(filePath))
+                {
+                    string jsonString = File.ReadAllText(filePath);
+                    return JsonSerializer.Deserialize<CustomCrosshair>(jsonString) ?? new CustomCrosshair();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading custom crosshair: {ex.Message}");
+            }
+            return new CustomCrosshair();
+        }
+
+        // Method to get all custom crosshair names
+        public static List<string> GetCustomCrosshairNames()
+        {
+            var names = new List<string>();
+            try
+            {
+                Directory.CreateDirectory(CustomCrosshairsPath);
+                string[] files = Directory.GetFiles(CustomCrosshairsPath, "*.json");
+                foreach (string file in files)
+                {
+                    names.Add(Path.GetFileNameWithoutExtension(file));
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting custom crosshair names: {ex.Message}");
+            }
+            return names;
+        }
+
+        // Method to delete a custom crosshair
+        public static bool DeleteCustomCrosshair(string name)
+        {
+            try
+            {
+                string filePath = Path.Combine(CustomCrosshairsPath, $"{name}.json");
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting custom crosshair: {ex.Message}");
+            }
             return false;
         }
     }

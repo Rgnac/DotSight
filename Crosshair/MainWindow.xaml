@@ -189,7 +189,10 @@
 
         <!-- Existing Settings Section -->
         <CheckBox x:Name="CrosshairToggle" Content="Enable Crosshair" IsChecked="True" Margin="0,0,0,10"/>
-        <Button x:Name="CrosshairsButton" Content="Crosshairs" Margin="0,10,0,10" Click="CrosshairsButton_Click"/>
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+            <Button x:Name="CrosshairsButton" Content="Crosshairs" Width="120" Margin="0,0,10,0" Click="CrosshairsButton_Click"/>
+            <Button x:Name="CustomCrosshairButton" Content="Custom Editor" Width="120" Click="CustomCrosshairButton_Click"/>
+        </StackPanel>
         <WrapPanel x:Name="CrosshairsPanel" Visibility="Collapsed" Margin="0,0,0,10"/>
         <TextBlock Text="Game Window Name" />
         <ComboBox x:Name="GameComboBox" 
